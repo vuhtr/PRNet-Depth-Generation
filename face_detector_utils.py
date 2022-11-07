@@ -50,8 +50,10 @@ def detect_face(image, face_detection):
     final_bbox = bbox
     if bbox_flip[0] > bbox[0]:
         final_bbox = bbox_flip
-        final_bbox[1] = image.shape[1] - final_bbox[1] - final_bbox[3]
-
+        # flip the bbox (score, x, y, w, h)
+        final_bbox[2] = image.shape[0] - final_bbox[2] - final_bbox[4]
+                                     
+        
     if final_bbox[0] == 0:
         return None
 
