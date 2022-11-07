@@ -1,0 +1,4 @@
+mediapipe
+scipy
+scikit-image
+tensorflow==1.4
