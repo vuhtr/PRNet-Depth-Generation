@@ -25,7 +25,7 @@ def get_bbox(detections, image_shape, MARGIN=0.02):
 
 def translate_bbox(bbox):
     # return left, right, top, bototm (startX, endX, startY, endY)
-    return bbox[1], bbox[1] + bbox[3], bbox[2], bbox[2] + bbox[4]
+    return bbox[0], bbox[0] + bbox[2], bbox[1], bbox[1] + bbox[3]
 
 
 def detect_face(image, face_detection):
