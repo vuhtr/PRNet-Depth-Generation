@@ -11,20 +11,28 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 prn = PRN(is_dlib = True, is_opencv = False) 
 
-path_image = './TestImages/0.jpg'
+# path_image = './TestImages/0.jpg'
 
-image = imread(path_image)
-image_shape = [image.shape[0], image.shape[1]]
+image_folder = './TestImages/'
+image_names = os.listdir(image_folder)
+image_path = [os.path.join(image_folder, name) for name in image_names]
 
-pos = prn.process(image, None, None, image_shape)
+output_folder = './TestImages/depth/'
+if not os.path.exists(output_folder):
+    os.makedirs(output_folder)
 
-kpt = prn.get_landmarks(pos)
+for idx, path in enumerate(image_path):
+    image = imread(path)
+    image_shape = [image.shape[0], image.shape[1]]
 
-# 3D vertices
-vertices = prn.get_vertices(pos)
+    pos = prn.process(image, None, None, image_shape)
 
-depth_scene_map = DepthImage.generate_depth_image(vertices, kpt, image.shape, isMedFilter=True)
+    kpt = prn.get_landmarks(pos)
 
-cv2.imshow('IMAGE', image[:,:,::-1])
-cv2.imshow('DEPTH', depth_scene_map)
-cv2.waitKey(3000)
+    # 3D vertices
+    vertices = prn.get_vertices(pos)
+
+    depth_scene_map = DepthImage.generate_depth_image(vertices, kpt, image.shape, isMedFilter=True)
+
+    # write dense scene map
+    cv2.imwrite(os.path.join(output_folder, image_names[idx]), depth_scene_map)
