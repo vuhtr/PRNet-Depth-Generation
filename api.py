@@ -7,6 +7,11 @@ from PIL import Image
 
 from predictor import PosPrediction
 
+import cv2
+import mediapipe as mp
+mp_face_detection = mp.solutions.face_detection
+
+from face_detector_utils import detect_face
 
 class PRN:
     ''' Joint 3D Face Reconstruction and Dense Alignment with Position Map Regression Network
@@ -22,11 +27,12 @@ class PRN:
         self.resolution_op = 256
 
         #---- load detectors
-        if is_dlib:
-            import dlib
-            detector_path = os.path.join(prefix, 'Data/net-data/mmod_human_face_detector.dat')
-            self.face_detector = dlib.cnn_face_detection_model_v1(
-                    detector_path)
+        # if is_dlib:
+        #     import dlib
+        #     detector_path = os.path.join(prefix, 'Data/net-data/mmod_human_face_detector.dat')
+        #     self.face_detector = dlib.cnn_face_detection_model_v1(
+        #             detector_path)
+        self.face_detector = mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence=0.5)
 
         if is_opencv:
             import cv2
@@ -44,8 +50,11 @@ class PRN:
         self.face_ind = np.loadtxt(prefix + '/Data/uv-data/face_ind.txt').astype(np.int32) # get valid vertices in the pos map
         self.triangles = np.loadtxt(prefix + '/Data/uv-data/triangles.txt').astype(np.int32) # ntri x 3
 
-    def dlib_detect(self, image):
-        return self.face_detector(image, 1)
+    # def dlib_detect(self, image):
+    #     return self.face_detector(image, 1)
+
+    def mp_detect(self, image):
+        return detect_face(image, self.face_detector)
 
     def net_forward(self, image):
         ''' The core of out method: regress the position map of a given image.
@@ -114,13 +123,20 @@ class PRN:
             center = np.array([right - (right - left) / 2.0, bottom - (bottom - top) / 2.0 + old_size*0.14])
             size = int(old_size*1.58)            
         else:
-            detected_faces = self.dlib_detect(image)
-            if len(detected_faces) == 0:
+            # detected_faces = self.dlib_detect(image)
+            detected_face = self.mp_detect(image)
+            # if len(detected_face) == 0:
+            # if detected_face[0] == 0:
+            #     print('warning: no detected face')
+            #     return None
+            if detected_face is None:
                 print('warning: no detected face')
                 return None
 
-            d = detected_faces[0].rect ## only use the first detected face (assume that each input image only contains one face)
-            left = d.left(); right = d.right(); top = d.top(); bottom = d.bottom()
+            # d = detected_faces[0].rect ## only use the first detected face (assume that each input image only contains one face)
+            d = detected_face
+            # left = d.left(); right = d.right(); top = d.top(); bottom = d.bottom()
+            left = d[0]; right = d[1]; top = d[2]; bottom = d[3]
             old_size = (right - left + bottom - top)/2
             center = np.array([right - (right - left) / 2.0, bottom - (bottom - top) / 2.0 + old_size*0.14])
             size = int(old_size*1.58)
