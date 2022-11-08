@@ -74,6 +74,8 @@ class PRN:
         Returns:
             pos: the 3D position map. (256, 256, 3).
         '''
+        is_flip = False
+        
         if isinstance(input, str):
             try:
                 image = imread(input)
@@ -125,6 +127,7 @@ class PRN:
         else:
             # detected_faces = self.dlib_detect(image)
             detected_face = self.mp_detect(image)
+
             # if len(detected_face) == 0:
             # if detected_face[0] == 0:
             #     print('warning: no detected face')
@@ -134,9 +137,13 @@ class PRN:
                 return None
 
             # d = detected_faces[0].rect ## only use the first detected face (assume that each input image only contains one face)
-            d = detected_face
+            is_flip, bbox = detected_face
+
+            if is_flip:
+                image = image[:, ::-1, :]
+
             # left = d.left(); right = d.right(); top = d.top(); bottom = d.bottom()
-            left = d[0]; right = d[1]; top = d[2]; bottom = d[3]
+            left = bbox[0]; right = bbox[1]; top = bbox[2]; bottom = bbox[3]
             old_size = (right - left + bottom - top)/2
             center = np.array([right - (right - left) / 2.0, bottom - (bottom - top) / 2.0 + old_size*0.14])
             size = int(old_size*1.58)
@@ -171,7 +178,7 @@ class PRN:
         vertices = np.vstack((vertices[:2,:], z))
         pos = np.reshape(vertices.T, [self.resolution_op, self.resolution_op, 3])
         
-        return pos
+        return pos, is_flip
             
     def get_landmarks(self, pos):
         '''

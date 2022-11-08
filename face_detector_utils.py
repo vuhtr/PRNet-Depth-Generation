@@ -29,7 +29,12 @@ def translate_bbox(bbox):
 
 
 def detect_face(image, face_detection):
-    # NOTE: face_detection is a MediaPipe Face Detection object
+    '''
+        image: (H, W, C)
+        face_detection: face detection model (MediaPipe)
+
+        Return: is_flip_image, bbox of main face
+    '''
 
     # fip image upside down
     image_flip = cv2.flip(image, 0)
@@ -48,17 +53,18 @@ def detect_face(image, face_detection):
 
     # get the result with better score
     final_bbox = bbox
+    flip = False
     if bbox_flip[0] > bbox[0]:
         final_bbox = bbox_flip
         # flip the bbox (score, x, y, w, h)
-        final_bbox[2] = image.shape[0] - final_bbox[2] - final_bbox[4]
+        # final_bbox[2] = image.shape[0] - final_bbox[2] - final_bbox[4]
+        flip = True
                                      
-        
     if final_bbox[0] == 0:
         return None
 
     final_bbox = final_bbox[1:]
-    return translate_bbox(final_bbox)
+    return flip, translate_bbox(final_bbox)
 
     
     

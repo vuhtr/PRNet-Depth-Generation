@@ -25,7 +25,7 @@ for idx, path in enumerate(image_path):
     image = imread(path)
     image_shape = [image.shape[0], image.shape[1]]
 
-    pos = prn.process(image, None, None, image_shape)
+    pos, is_flip = prn.process(image, None, None, image_shape)
 
     kpt = prn.get_landmarks(pos)
 
@@ -33,6 +33,10 @@ for idx, path in enumerate(image_path):
     vertices = prn.get_vertices(pos)
 
     depth_scene_map = DepthImage.generate_depth_image(vertices, kpt, image.shape, isMedFilter=True)
+
+    if is_flip:
+        # flip vertical depth image
+        depth_scene_map = np.flip(depth_scene_map, axis=0)
 
     # write dense scene map
     cv2.imwrite(os.path.join(output_folder, image_names[idx]), depth_scene_map)
